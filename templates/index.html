@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Text Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #000000;
+            --primary-dark: #1a1a1a;
+            --secondary-color: #333333;
+            --accent-color: #666666;
+            --background-color: #ffffff;
+            --text-color: #000000;
+            --card-background: #ffffff;
+            --border-color: #e0e0e0;
+            --hover-color: #f5f5f5;
+            --gradient-start: #000000;
+            --gradient-end: #333333;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #ffffff;
+            --primary-dark: #e0e0e0;
+            --secondary-color: #cccccc;
+            --accent-color: #999999;
+            --background-color: #121212;
+            --text-color: #ffffff;
+            --card-background: #1e1e1e;
+            --border-color: #333333;
+            --hover-color: #2a2a2a;
+            --gradient-start: #1a1a1a;
+            --gradient-end: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 2rem 0;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .generator-section, .history-section {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-section {
+            margin-bottom: 2rem;
+        }
+
+        .input-section h2 {
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        #prompt {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            resize: vertical;
+            min-height: 150px;
+            font-family: inherit;
+            background-color: var(--card-background);
+            color: var(--text-color);
+            transition: border-color 0.3s ease;
+        }
+
+        #prompt:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .generate-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        .generate-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .generate-btn:disabled {
+            background-color: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        .history-section {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .history-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .history-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .history-item h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .history-item p {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .history-item .timestamp {
+            font-size: 0.8rem;
+            color: var(--text-color);
+            opacity: 0.6;
+            margin-top: 0.5rem;
+        }
+
+        .disclaimer {
+            background-color: #fff1f2;
+            border: 2px solid #fecdd3;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: #881337;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        [data-theme="dark"] .disclaimer {
+            background-color: rgba(255, 241, 242, 0.1);
+            border-color: #881337;
+        }
+
+        .disclaimer i {
+            margin-right: 0.5rem;
+            color: #e11d48;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        .error-message {
+            display: none;
+            color: var(--accent-color);
+            background-color: #fde8e8;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .output-section {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .output-section.visible {
+            display: block;
+        }
+
+        .output-box {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
+        .suggestions {
+            margin-top: 2rem;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .suggestion-chip {
+            background-color: #e1e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .suggestion-chip:hover {
+            background-color: #d1d8e0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.visible {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--card-background);
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .modal h2 {
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .modal p {
+            margin-bottom: 1rem;
+        }
+
+        .contact-form, .feedback-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--card-background);
+            color: var(--text-color);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #357abd;
+        }
+
+        .floating-feedback {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--primary-color);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .floating-feedback:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 1.5rem 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .generator-section, .history-section {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Help Dashboard Styles */
+        .help-dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .help-card {
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .help-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .help-card h3 {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .help-card i {
+            font-size: 1.5rem;
+        }
+
+        .help-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .help-card li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .help-card li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+
+        .help-card .tip {
+            background: var(--hover-color);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--card-background);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+        }
+
+        .action-button i {
+            font-size: 1.1rem;
+        }
+
+        .contact-btn {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border: none;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .feedback-btn {
+            background: var(--card-background);
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .feedback-btn:hover {
+            background: var(--primary-color);
+            color: var(--card-background);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--hover-color);
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(45deg);
+            background: var(--primary-color);
+            color: var(--card-background);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <h2>AI Text Generator</h2>
+        </div>
+        <div class="nav-buttons">
+            <button class="theme-toggle" title="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="action-button contact-btn" title="Contact us">
+                <i class="fas fa-envelope"></i>
+                Contact Us
+            </button>
+            <button class="action-button feedback-btn" title="Give feedback">
+                <i class="fas fa-comment"></i>
+                Feedback
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>AI Text Generator</h1>
+            <p>Generate creative and engaging text using artificial intelligence</p>
+        </div>
+
+        <div class="disclaimer">
+            <i class="fas fa-exclamation-circle"></i>
+            <strong>Please Note:</strong> This AI model may occasionally make mistakes or generate inaccurate information. 
+            Always review and verify the generated content before using it. The model is designed for creative assistance 
+            and should not be relied upon for critical or factual information without proper verification.
+        </div>
+
+        <div class="main-content">
+            <div class="generator-section">
+                <div class="input-section">
+                    <h2>Enter Your Prompt</h2>
+                    <div class="settings-section">
+                        <label for="max-length">Maximum Character Length:</label>
+                        <input type="number" id="max-length" min="50" max="1000" value="200" step="50">
+                    </div>
+                    <textarea id="prompt" placeholder="Type your prompt here... (e.g., 'The future of technology')"></textarea>
+                    <button id="generate-btn" class="generate-btn">Generate Text</button>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Generating thoughtful response...</p>
+                </div>
+
+                <div class="error-message" id="error-message"></div>
+
+                <div class="output-section" id="output-section">
+                    <h2>Generated Text</h2>
+                    <div class="output-box" id="generated-text"></div>
+                    <div class="stats">
+                        <span id="word-count">Words: 0</span>
+                        <span id="character-count">Characters: 0</span>
+                    </div>
+                </div>
+
+                <div class="suggestions">
+                    <h3>Try These Prompts</h3>
+                    <div class="suggestion-chips">
+                        <span class="suggestion-chip">The future of artificial intelligence</span>
+                        <span class="suggestion-chip">Environmental conservation efforts</span>
+                        <span class="suggestion-chip">The power of education</span>
+                        <span class="suggestion-chip">Scientific discoveries</span>
+                        <span class="suggestion-chip">Leadership qualities</span>
+                        <span class="suggestion-chip">Technology innovation</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <div class="history-header">
+                    <h2>Generation History</h2>
+                    <button class="clear-history-btn" id="clearHistoryBtn">
+                        <i class="fas fa-trash"></i>Clear History
+                    </button>
+                </div>
+                <div id="history-list">
+                    <!-- History items will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Help & Guidelines</h2>
+            <div class="help-dashboard">
+                <div class="help-card">
+                    <h3><i class="fas fa-magic"></i> Getting Started</h3>
+                    <ul>
+                        <li>Enter your prompt in the text area</li>
+                        <li>Adjust the maximum length if needed</li>
+                        <li>Click "Generate Text" to create content</li>
+                        <li>View your generation history on the right</li>
+                    </ul>
+                    <div class="tip">
+                        <strong>Pro Tip:</strong> Be specific in your prompts for better results
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <h3><i class="fas fa-lightbulb"></i> Writing Tips</h3>
+                    <ul>
+                        <li>Use clear and concise language</li>
+                        <li>Include relevant keywords</li>
+                        <li>Specify the desired tone or style</li>
+                        <li>Review and edit generated content</li>
+                    </ul>
+                    <div class="tip">
+                        <strong>Remember:</strong> AI is a tool to assist, not replace human creativity
+                    </div>
+                </div>
+
+                <div class="help-card">
+                    <h3><i class="fas fa-cog"></i> Features</h3>
+                    <ul>
+                        <li>Dark/Light theme toggle</li>
+                        <li>Generation history tracking</li>
+                        <li>Adjustable text length</li>
+                        <li>One-click text copying</li>
+                    </ul>
+                    <div class="tip">
+                        <strong>Note:</strong> Your history is saved locally in your browser
+                    </div>
+                </div>
+
+                <div class="help-card">
+                    <h3><i class="fas fa-exclamation-circle"></i> Important Notes</h3>
+                    <ul>
+                        <li>AI may make mistakes</li>
+                        <li>Verify generated information</li>
+                        <li>Keep prompts appropriate</li>
+                        <li>Respect content guidelines</li>
+                    </ul>
+                    <div class="tip">
+                        <strong>Safety:</strong> Always review generated content before using
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div class="modal" id="contactModal">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Contact Us</h2>
+            <form class="contact-form">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal" id="feedbackModal">
+        <div class="modal-content">
+            <button class="modal-close">&times;</button>
+            <h2>Give Feedback</h2>
+            <form class="feedback-form">
+                <div class="form-group">
+                    <label for="rating">Rating</label>
+                    <div class="rating-stars">
+                        <i class="far fa-star" data-rating="1"></i>
+                        <i class="far fa-star" data-rating="2"></i>
+                        <i class="far fa-star" data-rating="3"></i>
+                        <i class="far fa-star" data-rating="4"></i>
+                        <i class="far fa-star" data-rating="5"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="feedback-text">Your Feedback</label>
+                    <textarea id="feedback-text" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generate-btn');
+            const promptInput = document.getElementById('prompt');
+            const maxLengthInput = document.getElementById('max-length');
+            const loading = document.getElementById('loading');
+            const outputSection = document.getElementById('output-section');
+            const generatedText = document.getElementById('generated-text');
+            const errorMessage = document.getElementById('error-message');
+            const wordCount = document.getElementById('word-count');
+            const characterCount = document.getElementById('character-count');
+            const suggestionChips = document.querySelectorAll('.suggestion-chip');
+            const historyList = document.getElementById('history-list');
+
+            // Load history from localStorage
+            let generationHistory = JSON.parse(localStorage.getItem('textGenerationHistory') || '[]');
+            updateHistoryDisplay();
+
+            function setLoading(isLoading) {
+                loading.classList.toggle('visible', isLoading);
+                generateBtn.disabled = isLoading;
+                generateBtn.textContent = isLoading ? 'Generating...' : 'Generate Text';
+            }
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                outputSection.classList.remove('visible');
+            }
+
+            function hideError() {
+                errorMessage.style.display = 'none';
+            }
+
+            function addToHistory(prompt, generatedText) {
+                const timestamp = new Date().toLocaleString();
+                generationHistory.unshift({
+                    prompt,
+                    text: generatedText,
+                    timestamp,
+                });
+
+                // Keep only the last 50 entries
+                if (generationHistory.length > 50) {
+                    generationHistory.pop();
+                }
+
+                localStorage.setItem('textGenerationHistory', JSON.stringify(generationHistory));
+                updateHistoryDisplay();
+            }
+
+            function updateHistoryDisplay() {
+                historyList.innerHTML = '';
+                generationHistory.forEach((item, index) => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `
+                        <h4>${item.prompt}</h4>
+                        <p>${item.text}</p>
+                        <div class="timestamp">${item.timestamp}</div>
+                    `;
+                    historyItem.addEventListener('click', () => {
+                        promptInput.value = item.prompt;
+                        generatedText.textContent = item.text;
+                        outputSection.classList.add('visible');
+                        const words = item.text.trim().split(/\s+/).length;
+                        const chars = item.text.length;
+                        wordCount.textContent = `Words: ${words}`;
+                        characterCount.textContent = `Characters: ${chars}`;
+                    });
+                    historyList.appendChild(historyItem);
+                });
+            }
+
+            async function generateText() {
+                const prompt = promptInput.value.trim();
+                const maxLength = parseInt(maxLengthInput.value);
+                
+                if (!prompt) {
+                    showError('Please enter a prompt');
+                    return;
+                }
+
+                if (isNaN(maxLength) || maxLength < 50 || maxLength > 1000) {
+                    showError('Please enter a valid maximum length between 50 and 1000 characters');
+                    return;
+                }
+
+                hideError();
+                setLoading(true);
+
+                try {
+                    const response = await fetch('/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            prompt,
+                            max_length: maxLength
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to generate text');
+                    }
+
+                    generatedText.textContent = data.text;
+                    wordCount.textContent = `Words: ${data.stats.words}`;
+                    characterCount.textContent = `Characters: ${data.stats.characters}`;
+                    outputSection.classList.add('visible');
+
+                    // Add to history
+                    addToHistory(prompt, data.text);
+                } catch (error) {
+                    showError(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            generateBtn.addEventListener('click', generateText);
+
+            promptInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    generateText();
+                }
+            });
+
+            suggestionChips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    promptInput.value = this.textContent;
+                    promptInput.focus();
+                });
+            });
+
+            // Validate max length input
+            maxLengthInput.addEventListener('input', function() {
+                let value = parseInt(this.value);
+                if (value < 50) this.value = 50;
+                if (value > 1000) this.value = 1000;
+            });
+
+            // Theme toggle functionality
+            const themeToggle = document.querySelector('.theme-toggle');
+            const html = document.documentElement;
+            const themeIcon = themeToggle.querySelector('i');
+
+            function updateThemeIcon(isDark) {
+                themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            }
+
+            themeToggle.addEventListener('click', () => {
+                const isDark = html.getAttribute('data-theme') === 'dark';
+                html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+                localStorage.setItem('theme', isDark ? 'light' : 'dark');
+                updateThemeIcon(!isDark);
+            });
+
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            html.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme === 'dark');
+
+            // Modal functionality
+            const modals = {
+                help: document.getElementById('helpModal'),
+                contact: document.getElementById('contactModal'),
+                feedback: document.getElementById('feedbackModal')
+            };
+
+            function openModal(modalId) {
+                modals[modalId].classList.add('visible');
+            }
+
+            function closeModal(modalId) {
+                modals[modalId].classList.remove('visible');
+            }
+
+            // Add click events for buttons
+            document.querySelector('.help-btn').addEventListener('click', () => openModal('help'));
+            document.querySelector('.contact-btn').addEventListener('click', () => openModal('contact'));
+            document.querySelector('.feedback-btn').addEventListener('click', () => openModal('feedback'));
+
+            // Close buttons
+            document.querySelectorAll('.modal-close').forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = button.closest('.modal');
+                    modal.classList.remove('visible');
+                });
+            });
+
+            // Close modal when clicking outside
+            Object.values(modals).forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('visible');
+                    }
+                });
+            });
+
+            // Star rating functionality
+            const ratingStars = document.querySelectorAll('.rating-stars i');
+            let currentRating = 0;
+
+            ratingStars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    const rating = this.dataset.rating;
+                    updateStars(rating);
+                });
+
+                star.addEventListener('click', function() {
+                    currentRating = this.dataset.rating;
+                    updateStars(currentRating);
+                });
+            });
+
+            document.querySelector('.rating-stars').addEventListener('mouseleave', () => {
+                updateStars(currentRating);
+            });
+
+            function updateStars(rating) {
+                ratingStars.forEach(star => {
+                    const starRating = star.dataset.rating;
+                    star.className = starRating <= rating ? 'fas fa-star' : 'far fa-star';
+                });
+            }
+
+            // Form submissions
+            document.querySelector('.contact-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Add your contact form submission logic here
+                alert('Thank you for contacting us! We will get back to you soon.');
+                closeModal('contact');
+                this.reset();
+            });
+
+            document.querySelector('.feedback-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Add your feedback form submission logic here
+                alert('Thank you for your feedback!');
+                closeModal('feedback');
+                this.reset();
+                currentRating = 0;
+                updateStars(0);
+            });
+
+            // Add clear history functionality
+            const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+            
+            clearHistoryBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all history? This action cannot be undone.')) {
+                    generationHistory = [];
+                    localStorage.removeItem('textGenerationHistory');
+                    updateHistoryDisplay();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
